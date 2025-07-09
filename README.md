@@ -4,7 +4,7 @@ A real-time dashboard built using **Flask**, **MongoDB**, and **Vanilla JS** to 
 
 This project is a part of the **TechStaX Developer Assignment**.
 
-![demo_video](assets/demo.webm)
+![demo_video](assets/demo.gif)
 
 ---
 
