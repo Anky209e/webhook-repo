@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GitHub Event Feed</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #0e0e0e;
+      color: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    header {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .refresh-timer {
+      font-size: 0.9em;
+      color: #aaa;
+    }
+
+    h1 {
+      font-size: 1.8em;
+      color: #ffffff;
+      margin: 0 auto;
+    }
+
+    .event {
+      background-color: #1a1a1a;
+      border-left: 4px solid #00c3ff;
+      padding: 15px 20px;
+      margin: 12px 0;
+      width: 100%;
+      max-width: 800px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      border-radius: 6px;
+    }
+
+    .event .timestamp {
+      font-size: 0.85em;
+      color: #999;
+      margin-bottom: 6px;
+    }
+
+    .event .message {
+      font-size: 1em;
+      line-height: 1.5;
+      color: #ddd;
+    }
+
+    .event .details {
+      font-family: monospace;
+      font-size: 0.85em;
+      color: #aaa;
+      margin-top: 6px;
+    }
+
+    a {
+      color: #00c3ff;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="refresh-timer" id="timer">Refreshing in 15s</div>
+    <h1>GitHub Events</h1>
+    <div></div>
+  </header>
+
+  <div id="feed"></div>
+
+  <script>
+    let countdown = 15;
+    const timerDiv = document.getElementById("timer");
+
+    function updateTimerDisplay() {
+      timerDiv.textContent = `Refreshing in ${countdown}s`;
+    }
+
+    function startCountdown() {
+      countdown = 15;
+      updateTimerDisplay();
+      const interval = setInterval(() => {
+        countdown--;
+        updateTimerDisplay();
+        if (countdown <= 0) {
+          clearInterval(interval);
+          fetchEvents();
+          startCountdown();
+        }
+      }, 1000);
+    }
+
+    async function fetchEvents() {
+      const res = await fetch("/events");
+      const events = await res.json();
+      const container = document.getElementById("feed");
+      container.innerHTML = "";
+
+      events.forEach(event => {
+        const div = document.createElement("div");
+        div.className = "event";
+
+        let html = `
+          <div class="timestamp">${event.timestamp}</div>
+          <div class="message">${event.message}</div>
+        `;
+
+        if (event.commit_message && event.commit_message !== "N/A") {
+          html += `<div class="details">Message: ${event.commit_message}</div>`;
+        }
+
+        if (event.commit_id && event.commit_id !== "N/A") {
+          html += `<div class="details">Commit: ${event.commit_id.slice(0, 8)}...</div>`;
+        }
+
+        if (event.repository_url) {
+          html += `<div class="details">Repo: <a href="${event.repository_url}" target="_blank">${event.repository}</a></div>`;
+        }
+
+        div.innerHTML = html;
+        container.appendChild(div);
+      });
+    }
+
+    fetchEvents();
+    startCountdown();
+  </script>
+</body>
+</html>
