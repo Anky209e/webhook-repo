@@ -4,81 +4,230 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>GitHub Event Feed</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    body {
+    :root {
+      --bg: #10131a;
+      --card-bg: #181c24;
+      --accent: #00e1ff;
+      --accent2: #ff5e62;
+      --text: #f8fafd;
+      --text-muted: #a0aec0;
+      --border: #23283a;
+      --shadow: 0 4px 24px rgba(0,0,0,0.35);
+      --radius: 14px;
+      --mono: 'Fira Mono', monospace;
+      --sans: 'Inter', 'Segoe UI', Arial, sans-serif;
+    }
+
+    html, body {
+      height: 100%;
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #0e0e0e;
-      color: #f0f0f0;
+      padding: 0;
+      background: linear-gradient(135deg, #10131a 0%, #181c24 100%);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+
+    body {
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 20px;
+      padding: 32px 8px 24px 8px;
+      min-height: 100vh;
+      background: linear-gradient(120deg, #10131a 0%, #23283a 100%);
     }
 
     header {
       width: 100%;
-      max-width: 800px;
+      max-width: 820px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 32px;
+      padding: 0 8px;
+      position: relative;
     }
 
     .refresh-timer {
-      font-size: 0.9em;
-      color: #aaa;
+      position: absolute;
+      left: 0;
+      top: -12px;
+      width: 54px;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+    }
+
+    .progress-circle {
+      position: relative;
+      width: 54px;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .progress-circle svg {
+      transform: rotate(-90deg);
+      width: 54px;
+      height: 54px;
+    }
+
+    .progress-bg {
+      stroke: var(--border);
+      stroke-width: 6;
+      fill: none;
+    }
+
+    .progress-bar {
+      stroke: var(--accent2);
+      stroke-width: 6;
+      fill: none;
+      stroke-linecap: round;
+      transition: stroke-dasharray 0.3s;
+    }
+
+    .timer-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: var(--mono);
+      font-size: 1.1em;
+      color: var(--accent2);
+      font-weight: bold;
+      user-select: none;
+      pointer-events: none;
+      text-shadow: 0 2px 8px #10131a;
     }
 
     h1 {
-      font-size: 1.8em;
-      color: #ffffff;
+      font-size: 2.1em;
+      font-weight: 700;
+      color: var(--accent);
       margin: 0 auto;
+      letter-spacing: 0.03em;
+      text-shadow: 0 2px 16px rgba(0,225,255,0.08);
+    }
+
+    #feed {
+      width: 100%;
+      max-width: 820px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
     }
 
     .event {
-      background-color: #1a1a1a;
-      border-left: 4px solid #00c3ff;
-      padding: 15px 20px;
-      margin: 12px 0;
-      width: 100%;
-      max-width: 800px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-      border-radius: 6px;
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      border-left: 6px solid var(--accent);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      padding: 22px 28px 18px 24px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+      animation: fadeIn 0.7s cubic-bezier(.4,0,.2,1);
+    }
+
+    .event:hover {
+      border-left: 6px solid var(--accent2);
+      box-shadow: 0 8px 32px rgba(0,225,255,0.10), var(--shadow);
+      transform: translateY(-2px) scale(1.01);
     }
 
     .event .timestamp {
-      font-size: 0.85em;
-      color: #999;
-      margin-bottom: 6px;
+      font-size: 0.93em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      font-family: var(--mono);
+      letter-spacing: 0.01em;
+      opacity: 0.85;
     }
 
     .event .message {
-      font-size: 1em;
-      line-height: 1.5;
-      color: #ddd;
+      font-size: 1.13em;
+      line-height: 1.6;
+      color: var(--text);
+      font-weight: 500;
+      margin-bottom: 6px;
+      word-break: break-word;
     }
 
     .event .details {
-      font-family: monospace;
-      font-size: 0.85em;
-      color: #aaa;
-      margin-top: 6px;
+      font-family: var(--mono);
+      font-size: 0.98em;
+      color: var(--accent2);
+      margin-top: 7px;
+      background: rgba(255,94,98,0.07);
+      padding: 4px 10px;
+      border-radius: 6px;
+      display: inline-block;
+      margin-right: 8px;
+      margin-bottom: 2px;
     }
 
     a {
-      color: #00c3ff;
-      text-decoration: none;
+      color: var(--accent);
+      text-decoration: underline dotted 1.5px;
+      transition: color 0.18s;
+      font-weight: 500;
+      word-break: break-all;
     }
 
     a:hover {
-      text-decoration: underline;
+      color: var(--accent2);
+      text-decoration: underline solid 2px;
+    }
+
+    @media (max-width: 600px) {
+      header, #feed {
+        max-width: 98vw;
+        padding: 0;
+      }
+      .event {
+        padding: 16px 10px 14px 10px;
+      }
+      h1 {
+        font-size: 1.3em;
+      }
+      .refresh-timer {
+        width: 38px;
+        height: 38px;
+      }
+      .progress-circle,
+      .progress-circle svg {
+        width: 38px;
+        height: 38px;
+      }
+      .timer-text {
+        font-size: 0.9em;
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(16px);}
+      to { opacity: 1; transform: none;}
     }
   </style>
 </head>
 <body>
   <header>
-    <div class="refresh-timer" id="timer">Refreshing in 15s</div>
+    <div class="refresh-timer">
+      <div class="progress-circle">
+        <svg>
+          <circle class="progress-bg" cx="27" cy="27" r="22"/>
+          <circle class="progress-bar" cx="27" cy="27" r="22"/>
+        </svg>
+        <span class="timer-text" id="timer">15</span>
+      </div>
+    </div>
     <h1>GitHub Events</h1>
     <div></div>
   </header>
@@ -86,17 +235,28 @@
   <div id="feed"></div>
 
   <script>
+    // Circular progress bar logic
+    const FULL_DASH_ARRAY = 2 * Math.PI * 22; // Circumference for r=22
     let countdown = 15;
+    let interval;
     const timerDiv = document.getElementById("timer");
+    const progressBar = document.querySelector(".progress-bar");
+
+    function setProgress(percent) {
+      const dash = FULL_DASH_ARRAY * percent;
+      progressBar.setAttribute("stroke-dasharray", `${dash} ${FULL_DASH_ARRAY}`);
+    }
 
     function updateTimerDisplay() {
-      timerDiv.textContent = `Refreshing in ${countdown}s`;
+      timerDiv.textContent = countdown;
+      setProgress(countdown / 15);
     }
 
     function startCountdown() {
       countdown = 15;
       updateTimerDisplay();
-      const interval = setInterval(() => {
+      clearInterval(interval);
+      interval = setInterval(() => {
         countdown--;
         updateTimerDisplay();
         if (countdown <= 0) {
@@ -138,6 +298,10 @@
         container.appendChild(div);
       });
     }
+
+    // Initialize progress bar
+    progressBar.setAttribute("stroke-dasharray", `${FULL_DASH_ARRAY} ${FULL_DASH_ARRAY}`);
+    progressBar.setAttribute("stroke-dashoffset", "0");
 
     fetchEvents();
     startCountdown();
